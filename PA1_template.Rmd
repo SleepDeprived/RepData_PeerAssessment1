@@ -1,13 +1,24 @@
 # Reproducible Research: Peer Assessment 1
-
+This data set includes information about step activitiy, binned into 5 minute intervals, for a single person over 61 days (October - November of 2012). 
 
 ## Loading and preprocessing the data
 
+```{r, echo=TRUE}
+data <- read.csv("activity.csv")
+data$date_as_obj <- as.Date(data$date, "%Y-%m-%d")
+data$hour  <- data$interval %/% 100
+data$minute  <- data$interval %% 100
+data$date_time <- strptime(paste(data$date, " ", data$hour, ":", data$minute, sep = ""), format("%Y-%m-%d %H:%M"))
 
+```
 
 ## What is mean total number of steps taken per day?
 
+```{r, echo=TRUE}
+mean_steps <- mean(tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum))
+median_steps <- median(tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum))
 
+```
 
 ## What is the average daily activity pattern?
 
