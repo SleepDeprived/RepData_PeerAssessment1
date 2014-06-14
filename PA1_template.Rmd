@@ -14,18 +14,45 @@ data$date_time <- strptime(paste(data$date, " ", data$hour, ":", data$minute, se
 
 ## What is mean total number of steps taken per day?
 
+Histogram is the frequency of total steps in a day binned into 15 segments.
+
 ```{r, echo=TRUE}
+total_steps_in_a_day  <-  tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum)
+hist(total_steps_in_a_day, breaks = 15, xlab = "Number of Steps Per Day", main = "Daily Step Frequency (Oct - Nov)")
+
 mean_steps <- mean(tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum))
 median_steps <- median(tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum))
 
 ```
 
+The mean number of steps in a day is -- STRING INTERPOLATE -- and the median number of steps in a day is --STRING INTERPOLATE--.
+
+
 ## What is the average daily activity pattern?
 
+```{r, echo=TRUE}
+    data$day_time <- data$date_time - trunc(data$date_time, "days")
+    data_na_removed <- data[!is.na(data$steps), ]
+average_steps_throughout_day <- tapply(data_na_removed$steps, data_na_removed$date_time - trunc(data_na_removed$date_time, "days"), mean)
+    average_steps_throughout_day <- ddply(.data = data_na_removed, .(day_time), summarize, ave_steps = mean(steps))    
+    plot(strptime(as.character(seconds_to_period(average_steps_throughout_day$day_time)), format="%HH %MM %SS"), average_steps_throughout_day$ave_steps, type = "l", xlab = "Time of Day", ylab = "Average Number of Steps")
+    
+```
+
+interval with max average steps is the 5 minute period at 08:35 with an average of 206.1698 steps
+
+```{r, echo=TRUE}
+    period_with_max_ave_steps <- average_steps_throughout_day[average_steps_throughout_day$ave_steps == max(average_steps_throughout_day$ave_steps), ]$day_time
+    
+```
 
 
 ## Imputing missing values
 
-
+```{r, echo=TRUE}
+    data_na_removed$day_of_week  <- as.factor(weekdays(data_na_removed$date_as_obj))
+    qplot(steps, data = data_na_removed, facets = day_of_week~., binwidth = 10)
+    ave_day_of_week_steps <- ddply(.data = data_na_removed, .(weekdays(date_as_obj)), summarize, ave_steps = mean(steps))
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
