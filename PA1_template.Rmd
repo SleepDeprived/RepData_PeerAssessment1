@@ -19,19 +19,20 @@ This data set includes information about step activitiy, binned into 5 minute in
 Histogram is the frequency of total steps in a day binned into 15 segments.
 
 ```{r, echo=TRUE}
-    total_steps_in_a_day  <-  tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum)
-
-    png("daily_step_frequency_na_removed.png", width = 480, height = 480, units="px")
-    hist(total_steps_in_a_day, breaks = 15, xlab = "Number of Steps Per Day", main = "Daily Step Frequency (Oct - Nov)")
-    dev.off( )
+    total_steps_in_a_day_na_removed  <-  tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum)
 
     mean_steps <- mean(tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum))
     median_steps <- median(tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum))
 
 ```
 
-The mean number of steps in a day is `r mean_steps` and the median number of steps in a day is `r median_steps`.
+The mean number of steps in a day is `r mean_steps` and the median number of steps in a day is `r median_steps`.  The data has the following distribution of steps per 5 minute interval:
 
+```{r histogram, fig.height=4}
+    png("figures/daily_step_frequency_na_removed.png", width = 480, height = 480, units="px")
+    hist(total_steps_in_a_day_na_removed, breaks = 15, xlab = "Number of Steps Per Day", main = "Daily Step Frequency (Oct - Nov)")
+    dev.off( )
+```
 
 ## What is the average daily activity pattern?
 
@@ -39,13 +40,17 @@ The mean number of steps in a day is `r mean_steps` and the median number of ste
     data$day_time <- data$date_time - trunc(data$date_time, "days")
     data_na_removed <- data[!is.na(data$steps), ]
     average_steps_throughout_day <- ddply(.data = data_na_removed, .(day_time), summarize, ave_steps = mean(steps))    
-    
-    png("daily_activity_average_step_number.png", width = 480, height = 480, units="px")
+```
+
+The daily pattern of steps is:
+
+```{r scatterplot, fig.height = 4}
+    png("figures/daily_activity_average_step_number.png", width = 480, height = 480, units="px")
     plot(strptime(as.character(seconds_to_period(average_steps_throughout_day$day_time)), format="%HH %MM %SS"), average_steps_throughout_day$ave_steps, type = "l", xlab = "Time of Day", ylab = "Average Number of Steps")
     dev.off( )
 ```
 
-interval with max average steps is the 5 minute period at `r time_period` with an average of `r period_with_max_ave_steps_step_num` steps
+The interval with max average steps is the 5 minute period at `r time_period` with an average of `r period_with_max_ave_steps_step_num` steps.
 
 ```{r, echo=TRUE}
     period_with_max_ave_steps <- average_steps_throughout_day[average_steps_throughout_day$ave_steps == max(average_steps_throughout_day$ave_steps), ]$day_time
@@ -97,15 +102,36 @@ Imputing data for the missing values in this way did not change the median (`r m
     median_steps_total <- median(data$steps)
     mean_steps_total <- mean(data$steps)
     t.test(data$steps, data_na_removed$steps)
+    total_steps_in_a_day  <-  tapply(data$steps, data$date_as_obj, sum)
+```
+The frequency for daily steps also increased .
+
+```{r histogram, fig.height=4}
+    png("figures/daily_step_frequency.png", width = 480, height = 480, units="px")
+    hist(total_steps_in_a_day, breaks = 15, xlab = "Number of Steps Per Day", main = "Daily Step Frequency (Oct - Nov)")
+    dev.off( )
 ```
 
-
-
-```{r, echo=TRUE}
-    --Make a histogram of the total number of steps taken each day
-    -- Do these values differ from the estimates from the first part of the assignment?
-    -- What is the impact of imputing missing data on the estimates of the total daily number of steps?
-
-```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+The following plot indicatest hat there is a difference in activity between weekdays and weekends:
+
+```{r, echo=TRUE}
+    data$weekday_weekend <- NA
+    sat_sun <- data$days %in% c("Saturday", "Sunday")
+    data[sat_sun,]$weekday_weekend <- "Weekend"
+    data[!sat_sun,]$weekday_weekend <- "Weekday"
+    data$weekday_weekend <- as.factor(data$weekday_weekend)
+
+    average_steps_weekend_weekday <- ddply(.data = data, .(interval, weekday_weekend), summarize, ave_steps = mean(steps))
+```
+
+```{r histogram, fig.height=4}
+    png("figures/daily_activity_average_weekday_weekend.png", width = 480, height = 480, units="px")
+    qplot(interval, ave_steps, data = average_steps_weekend_weekday, facets = weekday_weekend~., xlab = "Time of Day", ylab = "Average Number of Steps", geom = "line")
+    dev.off( )
+```
+
+
+
