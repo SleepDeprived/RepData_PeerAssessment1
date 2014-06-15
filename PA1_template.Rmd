@@ -21,7 +21,7 @@ Histogram is the frequency of total steps in a day binned into 15 segments.
 ```{r, echo=TRUE}
     total_steps_in_a_day  <-  tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum)
 
-    png("daily_step_frequency.png", width = 480, height = 480, units="px")
+    png("daily_step_frequency_na_removed.png", width = 480, height = 480, units="px")
     hist(total_steps_in_a_day, breaks = 15, xlab = "Number of Steps Per Day", main = "Daily Step Frequency (Oct - Nov)")
     dev.off( )
 
@@ -30,7 +30,7 @@ Histogram is the frequency of total steps in a day binned into 15 segments.
 
 ```
 
-The mean number of steps in a day is -- STRING INTERPOLATE -- and the median number of steps in a day is --STRING INTERPOLATE--.
+The mean number of steps in a day is `r mean_steps` and the median number of steps in a day is `r median_steps`.
 
 
 ## What is the average daily activity pattern?
@@ -45,10 +45,12 @@ The mean number of steps in a day is -- STRING INTERPOLATE -- and the median num
     dev.off( )
 ```
 
-interval with max average steps is the 5 minute period at 08:35 with an average of 206.1698 steps
+interval with max average steps is the 5 minute period at `r time_period` with an average of `r period_with_max_ave_steps_step_num` steps
 
 ```{r, echo=TRUE}
     period_with_max_ave_steps <- average_steps_throughout_day[average_steps_throughout_day$ave_steps == max(average_steps_throughout_day$ave_steps), ]$day_time
+    time_period <- strsplit(as.character(strptime(as.character(seconds_to_period(period_with_max_ave_steps)), format="%HH %MM %SS")), " ")[[1]][2]
+    period_with_max_ave_steps_step_num <-  average_steps_throughout_day[average_steps_throughout_day$ave_steps == max(average_steps_throughout_day$ave_steps), ]$ave_steps
     
 ```
 
@@ -96,6 +98,8 @@ Imputing data for the missing values in this way did not change the median (`r m
     mean_steps_total <- mean(data$steps)
     t.test(data$steps, data_na_removed$steps)
 ```
+
+
 
 ```{r, echo=TRUE}
     --Make a histogram of the total number of steps taken each day
