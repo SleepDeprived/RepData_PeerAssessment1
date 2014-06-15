@@ -20,7 +20,10 @@ Histogram is the frequency of total steps in a day binned into 15 segments.
 
 ```{r, echo=TRUE}
     total_steps_in_a_day  <-  tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum)
+
+    png("daily_step_frequency.png", width = 480, height = 480, units="px")
     hist(total_steps_in_a_day, breaks = 15, xlab = "Number of Steps Per Day", main = "Daily Step Frequency (Oct - Nov)")
+    dev.off( )
 
     mean_steps <- mean(tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum))
     median_steps <- median(tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum))
