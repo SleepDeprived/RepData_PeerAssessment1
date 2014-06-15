@@ -38,10 +38,11 @@ The mean number of steps in a day is -- STRING INTERPOLATE -- and the median num
 ```{r, echo=TRUE}
     data$day_time <- data$date_time - trunc(data$date_time, "days")
     data_na_removed <- data[!is.na(data$steps), ]
-average_steps_throughout_day <- tapply(data_na_removed$steps, data_na_removed$date_time - trunc(data_na_removed$date_time, "days"), mean)
     average_steps_throughout_day <- ddply(.data = data_na_removed, .(day_time), summarize, ave_steps = mean(steps))    
-    plot(strptime(as.character(seconds_to_period(average_steps_throughout_day$day_time)), format="%HH %MM %SS"), average_steps_throughout_day$ave_steps, type = "l", xlab = "Time of Day", ylab = "Average Number of Steps")
     
+    png("daily_activity_average_step_number.png", width = 480, height = 480, units="px")
+    plot(strptime(as.character(seconds_to_period(average_steps_throughout_day$day_time)), format="%HH %MM %SS"), average_steps_throughout_day$ave_steps, type = "l", xlab = "Time of Day", ylab = "Average Number of Steps")
+    dev.off( )
 ```
 
 interval with max average steps is the 5 minute period at 08:35 with an average of 206.1698 steps
@@ -54,16 +55,52 @@ interval with max average steps is the 5 minute period at 08:35 with an average 
 
 ## Imputing missing values
 
-The median, mean, and distribution of step numbers per period were examined for the data set as a whole and per day of the week.
+The median (`r median_steps_total_na_removed`), mean (`r mean_steps_total_na_removed`), and distribution of step numbers per period (step_frequency_by_day.png) were examined for the data set as a whole and per day of the week excluding missing (NA) values.  
 
 ```{r, echo=TRUE}
-    median(data_na_removed$steps)
-    mean(data_na_removed$steps)
+    median_steps_total_na_removed <- median(data_na_removed$steps)
+    mean_steps_total_na_removed <- mean(data_na_removed$steps)
     data_na_removed$day_of_week  <- as.factor(weekdays(data_na_removed$date_as_obj))
-    qplot(steps, data = data_na_removed, facets = day_of_week~., binwidth = 10)
+```
+```{r histogram, fig.height = 4}
+    png("figures/step_frequency_by_day.png", width = 480, height = 480, units="px" )
+    qplot(steps, data = data_na_removed, facets = day_of_week~., binwidth = 10, main = "Frequency of steps per interval by day", xlab = "Number of steps in an interval", ylab = "Frequency")
+    dev.off()
+```
+
+Additionally, I calculated the mean and median steps for each day and identified a statistically significant difference in mean step number between some days. 
+
+```{r, echo=TRUE}
     ave_day_of_week_steps <- ddply(.data = data_na_removed, .(weekdays(date_as_obj)), summarize, ave_steps = mean(steps))
+    colnames(ave_day_of_week_steps)[1] <- "days"
     median_day_of_week_steps <- ddply(.data = data_na_removed, .(weekdays(date_as_obj)), summarize, median_steps = median(steps))
     pairwise.t.test(data_na_removed$steps, data_na_removed$day_of_week, pool.sd = FALSE)
+```
+
+Therefore I decided to replace missing (NA) step values in the data with the mean step value for a period for each day of the week respectively.
+
+```{r, echo=TRUE}
+    data[is.na(data$steps) & data$days == "Monday",]$steps <- ave_day_of_week_steps[ave_day_of_week_steps$days == "Monday",]$ave_steps
+    data[is.na(data$steps) & data$days == "Tuesday",]$steps <- ave_day_of_week_steps[ave_day_of_week_steps$days == "Tuesday",]$ave_steps
+    data[is.na(data$steps) & data$days == "Wednesday",]$steps <- ave_day_of_week_steps[ave_day_of_week_steps$days == "Wednesday",]$ave_steps
+    data[is.na(data$steps) & data$days == "Thursday",]$steps <- ave_day_of_week_steps[ave_day_of_week_steps$days == "Thursday",]$ave_steps
+    data[is.na(data$steps) & data$days == "Friday",]$steps <- ave_day_of_week_steps[ave_day_of_week_steps$days == "Friday",]$ave_steps
+    data[is.na(data$steps) & data$days == "Saturday",]$steps <- ave_day_of_week_steps[ave_day_of_week_steps$days == "Saturday",]$ave_steps
+    data[is.na(data$steps) & data$days == "Sunday",]$steps <- ave_day_of_week_steps[ave_day_of_week_steps$days == "Sunday",]$ave_steps
+```
+
+Imputing data for the missing values in this way did not change the median (`r median_steps_total`) and had a non-significant impact upon the mean (`r mean_steps_total`)
+
+```{r, echo=TRUE}
+    median_steps_total <- median(data$steps)
+    mean_steps_total <- mean(data$steps)
+    t.test(data$steps, data_na_removed$steps)
+```
+
+```{r, echo=TRUE}
+    --Make a histogram of the total number of steps taken each day
+    -- Do these values differ from the estimates from the first part of the assignment?
+    -- What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
 ```
 
