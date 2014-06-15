@@ -4,12 +4,14 @@ This data set includes information about step activitiy, binned into 5 minute in
 ## Loading and preprocessing the data
 
 ```{r, echo=TRUE}
-data <- read.csv("activity.csv")
-data$date_as_obj <- as.Date(data$date, "%Y-%m-%d")
-data$hour  <- data$interval %/% 100
-data$minute  <- data$interval %% 100
-data$date_time <- strptime(paste(data$date, " ", data$hour, ":", data$minute, sep = ""), format("%Y-%m-%d %H:%M"))
-
+    library(ggplot2)
+    library(plyr)
+    data <- read.csv("activity.csv")
+    data$date_as_obj <- as.Date(data$date, "%Y-%m-%d")
+    data$hour  <- data$interval %/% 100
+    data$minute  <- data$interval %% 100
+    data$date_time <- strptime(paste(data$date, " ", data$hour, ":", data$minute, sep = ""), format("%Y-%m-%d %H:%M"))
+    
 ```
 
 ## What is mean total number of steps taken per day?
@@ -17,11 +19,11 @@ data$date_time <- strptime(paste(data$date, " ", data$hour, ":", data$minute, se
 Histogram is the frequency of total steps in a day binned into 15 segments.
 
 ```{r, echo=TRUE}
-total_steps_in_a_day  <-  tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum)
-hist(total_steps_in_a_day, breaks = 15, xlab = "Number of Steps Per Day", main = "Daily Step Frequency (Oct - Nov)")
+    total_steps_in_a_day  <-  tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum)
+    hist(total_steps_in_a_day, breaks = 15, xlab = "Number of Steps Per Day", main = "Daily Step Frequency (Oct - Nov)")
 
-mean_steps <- mean(tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum))
-median_steps <- median(tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum))
+    mean_steps <- mean(tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum))
+    median_steps <- median(tapply(data[!is.na(data$steps),]$steps, data[!is.na(data$steps),]$date_as_obj, sum))
 
 ```
 
@@ -49,10 +51,17 @@ interval with max average steps is the 5 minute period at 08:35 with an average 
 
 ## Imputing missing values
 
+The median, mean, and distribution of step numbers per period were examined for the data set as a whole and per day of the week.
+
 ```{r, echo=TRUE}
+    median(data_na_removed$steps)
+    mean(data_na_removed$steps)
     data_na_removed$day_of_week  <- as.factor(weekdays(data_na_removed$date_as_obj))
     qplot(steps, data = data_na_removed, facets = day_of_week~., binwidth = 10)
     ave_day_of_week_steps <- ddply(.data = data_na_removed, .(weekdays(date_as_obj)), summarize, ave_steps = mean(steps))
+    median_day_of_week_steps <- ddply(.data = data_na_removed, .(weekdays(date_as_obj)), summarize, median_steps = median(steps))
+    pairwise.t.test(data_na_removed$steps, data_na_removed$day_of_week, pool.sd = FALSE)
+
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
